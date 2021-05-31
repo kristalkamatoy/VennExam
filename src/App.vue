@@ -1,59 +1,81 @@
 <template>
   <div id="app">
-    <p class="field">BMI Calculator</p>
-
-    <table class="table">
-      <thead center border="1">
-        <tr>
-          <th>Gender</th>
-          <th>Weigth</th>
-          <th>Heigth</th>
-          <th>BMI</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(arrayTests) in arrayTest"  :key="arrayTests.height" >
-          <td>{{ arrayTests.gender }}</td>
-          <td>{{ arrayTests.weight }}</td>
-          <td>{{ arrayTests.height }}</td>
-          <td :style=" `color:${bmiColor[arrayTests.bmiKeyword]}`">{{ arrayTests.bmi }}</td>
-        </tr>
-      </tbody>
-    </table>
+<div class="row">
+  <div class="column">
+    <form>
+      
+    <h3 class="field">BMI Calculator</h3>
     
     <div class="field">   
-      
-        <label>Gender: </label>
-        <input v-model="gender" type="radio" value="Male"/>
+    <!-- GENDER -->
+    <div class="row">
+    <div class="column"><label>Gender: </label> </div><br/>
+    <div class="column"> 
+       <input v-model="gender" type="radio" value="Male"/>
         <label> Male </label> 
+    </div>
+        <div class="column"> 
         <input v-model="gender" type="radio" value="Female"/>
-        <label> Female</label> <br/>
-        <label >weight </label>
-        <input v-model="weight" type="number"/>
-        <label> kg</label> <br/>
-        <label>height </label>
-        <input v-model="height" type="number"/>
-        <label> cm</label><br>
+        <label> Female</label> <br/> 
+      </div>
+      </div>
+    <!-- end Gender  -->
+    <!-- Height -->
+    <div class="row">
+    <div class="column"><label>Height: </label> </div><br/>
+    <div class="column"> 
+       <input v-model="inch" type="number"/>
+        <label> in inches </label> 
+    </div>
+        <div class="column"> 
+        <input v-model="cm" type="number"/>
+        <label> in cm</label> <br/> 
+      </div>
+      </div>
+    <!-- end Height  -->
+    <!-- Weight -->
+    <div class="row">
+    <div class="column"><label>Weight: </label> </div><br/>
+    <div class="column"> 
+       <input v-model="kg" type="number"/>
+        <label> in kg </label> 
+    </div>
+        <div class="column"> 
+        <input v-model="lbs" type="number"/>
+        <label> in lbs</label> <br/> 
+      </div>
+      </div>
+    <!-- end Weight  -->
+
         
         
     </div>
     <div class="field">
-        <button @click="submit">Submit</button>
+        <button @click="submit">Save</button>
+         <button @click="clear">Clear</button>
       <div v-if="this.localbmi > 0">
         <h4>Your BMI is </h4>
         <h2 :style=" `color:${bmiColor[bmi]}`">{{ this.localbmi }}</h2>
-        <img :src="bmiimage"> 
-        <!-- <img src="./images/Female_Normal.png"> -->
-        <h4>You are {{ this.bmi }}</h4>
+        <h4> ({{ this.bmi }})</h4>
     </div>
     </div>
-
+  </form>
+  </div>
+  <div class="column">
+ <h3 class="field">History</h3>
+    <array-test  :arraytests="arrayTest" :bmiColor="bmiColor"  @update-value="callUpdate"></array-test>
+  </div>
+</div>
+  <!-- en here -->
   </div>
 </template>
 <script>
+import UpdateTable from "./components/UpdateTable.vue"
 
 export default {
+
   name: "App",
+  
   data() {
     return {
       bmiColor : {"Underweight": "blue", "Normal weight": "Green", "Overweight": "Orange", "Obese": "Red"},
@@ -63,13 +85,24 @@ export default {
       },
       randomNum: "",
       weight:"",
-      height:"",
       gender: "",
-      localbmi: "",
-      arrayTest: [{gender: "", weight: "", height: "", bmi: "", bmiKeyword: ""}]
+      arrayTest: [{gender: "", weight: "", height: "", bmi: "", bmiKeyword: "", view: ""}],
+      cm: 0,
+      inch: 0,
+      kg: 0,
+      lbs: 0
     };
   },
+  components: {
+    'array-test':UpdateTable
+  },
   computed: {
+    localbmi () {
+      let weight = parseFloat(this.kg)
+      let cm = parseFloat(this.cm) / 100
+
+      return weight / (cm * cm)
+    },
     bmiimage () {
        if (parseInt(this.localbmi) < 18.9) {
         return this.gender === "Male"? require("./images/Male_Under.png") : require("./images/Female_Under.png");
@@ -88,6 +121,7 @@ export default {
       } 
     },
     bmi () {
+
        if (parseInt(this.localbmi) < 18.9) {
         return "Underweight";
       } else if (
@@ -104,21 +138,48 @@ export default {
       } else {
         return "Obese";
       } 
-    }
+    },
+
   },
   methods: {
     submit() {
-      let weight = parseFloat(this.weight)
-      let height = parseFloat(this.height) / 100
-      this.localbmi = weight / (height * height)
-      
-
-      this.arrayTest.push({'gender': this.gender, 'weight': this.weight, 'height': this.height, 'bmi': this.localbmi, 'bmiKeyword': this.bmi});
+      this.arrayTest.push({'gender': this.gender, 'weight': this.kg, 'height': this.cm, 'bmi': this.localbmi, 'bmiKeyword': this.bmi, 'view':"view"});
+    
       if (this.arrayTest.length > 11) {
         this.arrayTest.splice(1, 1)
       }
-    }
+    },
+  callUpdate (arrayVal) {
+    this.kg = arrayVal.weight;
+    this.gender = arrayVal.gender;
+    this.cm = arrayVal.height;
+    this.localbmi = arrayVal.bmi;
+   }  ,
+  clear () {
+    this.kg = '';
+    this.gender = '';
+    this.cm = '';
+    this.localbmi = '';
+   }  
   },
+   beforeMount() {
+    alert('Hi User! Welcome to BMI Calculator')
+ },
+  watch: {
+    inch() {
+      this.cm = this.inch ? (this.inch * 2.54).toFixed(2) : 0;
+    },
+   cm() {
+      this.inch = this.cm ? (this.cm / 2.54).toFixed(2) : 0;
+    },
+
+  kg() {
+      this.lbs = this.kg ? (this.kg * 2.20462).toFixed(2) : 0;
+    },
+   lbs() {
+      this.kg = this.lbs ? (this.lbs / 2.20462).toFixed(2) : 0;
+    }
+  }
 };
 </script>
 
@@ -138,13 +199,14 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: left;
   color: #2c3e50;
-  margin-top: 10px;
+  margin: auto;
   margin-left: 10px;
 }
 
 
 input {
-  width: 5%;
+  margin: 10px;
+  width: 40%;
   margin-top: 10px;
 }
 
@@ -157,9 +219,8 @@ input {
 table {
   border-collapse: collapse;
   border: 1px solid black;
-  align-content: center;
-  width: 50%;
-  float: right;
+  width: 100%;
+
 } 
 table.table {
     margin-right: 0px;
@@ -172,4 +233,24 @@ th,td {
   
 }
 tr:nth-child(even) {background-color: #f2f2f2;}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Create two equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 50%;
+ 
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+  
+}
+
 </style>
